@@ -73,14 +73,13 @@ func Transfer(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("no this source User"))
 		log.Panicln("no this User")
 	}
-	tsource := New(SourceUserName, "", SourceUserId, 0, 0)
+	source := NewPointer(SourceUserName, "", SourceUserId, 0, 0)
 	sLock, err := GlobalBank.LockRead(SourceId)
 	if err != nil {
 		log.Panicln("获取源用户锁失败")
 		w.Write([]byte("获取源用户锁失败"))
 	}
-	tsource.lock = sLock
-	source := &tsource
+	source.lock = sLock
 	source.lock.lock.Lock()
 	defer source.lock.lock.Unlock()
 	if ok, err := source.Transfer(DestinationUserId, money); !ok {
@@ -88,4 +87,28 @@ func Transfer(w http.ResponseWriter, r *http.Request) {
 		log.Panicln(err)
 	}
 	w.Write([]byte("transfer money success"))
+}
+
+func Balance(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if err := recover(); err != nil {
+			return
+		}
+	}()
+	err := r.ParseForm()
+	if err != nil {
+		w.Write([]byte(err.Error()))
+		log.Panicln(err)
+    }
+	formData := make(map[string]interface{})
+	json.NewDecoder(r.Body).Decode(&formData)
+	UserId := formData["UserId"].(string)
+	userId, _ := strconv.Atoi(UserId)
+	user := NewPointer("", "", userId, 0, 0)
+	err = user.Balance()
+	if err != nil {
+		log.Panicln(err)
+		w.Write([]byte("获取用户余额失败"))
+	}
+	w.Write([]byte("User balance = " + strconv.Itoa(user.GetBalance())))
 }

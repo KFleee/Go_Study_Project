@@ -16,7 +16,7 @@ type User struct{
 	lock Lock "读写锁，保障并发数据安全"
 }
 
-func New(UserName, passwd string, userId, balance, power int) User{
+func New(UserName, passwd string, userId, balance, power int) User {
 	var user User
 	user.userId = userId
 	user.UserName = UserName
@@ -26,6 +26,18 @@ func New(UserName, passwd string, userId, balance, power int) User{
 	return user
 }
 
+func NewPointer(UserName, passwd string, userId, balance, power int) *User {
+	var user User
+	user.userId = userId
+	user.UserName = UserName
+	user.passwd = passwd
+	user.balance = balance
+	user.power = power
+	return &user
+}
+func (user *User)GetBalance() int {
+	return user.balance
+}
 func (user *User) IsHavePower() bool {
 	if user.power == 1 {
 		return true
@@ -123,4 +135,22 @@ func (source *User) Transfer(destinationId, money int) (bool, error) {
 	destination.lock.lock.Unlock()
 	log.Println("源用户余额不足")
 	return false, errors.New("源用户余额不足")
-} 
+}
+
+func (user *User) Balance() error {
+	userLock, err := GlobalBank.LockRead(strconv.Itoa(user.GetUserId()))
+	if err != nil {
+		log.Println(err)
+		return errors.New("获取用户锁失败")
+	}
+	user.lock = userLock
+	user.lock.lock.RLock()
+	var balance int
+	err = Db.QueryRow("Select balance From User Where userId = ?", user.GetUserId()).Scan(&balance)
+	if err != nil {
+		log.Println("no this user or get user balance error")
+		return err
+	}
+	user.balance = balance
+	return nil
+}
