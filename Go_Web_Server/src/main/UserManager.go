@@ -62,10 +62,16 @@ func (user *User) OpenAccount(username, passwd string, power int) (int64, error)
 	}
 }
 
-func (source *User) Tranfer(destinationId, money int) (bool, error) {
+func (source *User) Transfer(destinationId, money int) (bool, error) {
 	var UserName string
 	var balance int
-	err := Db.QueryRow("Select UserName, balance From User Where userId = ?", destinationId).Scan(&UserName, &balance)
+	dLock, err := GlobalBank.LockRead(strconv.Itoa(destinationId))
+	dLock.lock.Lock()
+	if err != nil {
+		log.Println("获取目的用户锁失败")
+		return false, err
+	}
+	err = Db.QueryRow("Select UserName, balance From User Where userId = ?", destinationId).Scan(&UserName, &balance)
 	if err != nil {
 		log.Println("no this User")
 		return false, err
@@ -74,25 +80,12 @@ func (source *User) Tranfer(destinationId, money int) (bool, error) {
 		userId: destinationId,
 		UserName: UserName,
 		balance: balance,
+		lock: dLock,
 	}
-	sLock, err := GlobalBank.LockRead(strconv.Itoa(source.GetUserId()))
-	if err != nil {
-		log.Println("获取源用户锁失败")
-		return false, err
-	}
-	source.lock = sLock
-	dLock, err := GlobalBank.LockRead(strconv.Itoa(destination.GetUserId()))
-	if err != nil {
-		log.Println("获取目的用户锁失败")
-		return false, err
-	}
-	destination.lock = dLock
-	source.lock.lock.RLock()
-	if (source.balance - money) > 0 {
-		destination.lock.lock.Lock()
-		source.lock.lock.RUnlock()
-		source.lock.lock.Lock()
-		defer source.lock.lock.Unlock()
+	var SourceBalance int
+	err = Db.QueryRow("Select balance From User Where userId = ?", source.GetUserId()).Scan(&SourceBalance)
+	source.balance = SourceBalance
+	if (source.balance - money) >= 0 {
 		defer destination.lock.lock.Unlock()
 		source.balance -= money
 		destination.balance += money
@@ -127,7 +120,7 @@ func (source *User) Tranfer(destinationId, money int) (bool, error) {
 		}
 		return true, nil
 	}
-	source.lock.lock.RUnlock()
+	destination.lock.lock.Unlock()
 	log.Println("源用户余额不足")
 	return false, errors.New("源用户余额不足")
 } 

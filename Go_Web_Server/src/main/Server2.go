@@ -12,8 +12,8 @@ var GlobalSessions *session.Manager
 var Db *sql.DB
 var GlobalBank *Bank
 const(
-	MaxLifeTime int64 = 1800
-	GcLifeTime int64 = 300
+	MaxLifeTime int64 = 18000
+	GcLifeTime int64 = 3000
 )
 func init() {
     sessionConfig := &session.ManagerConfig{
@@ -55,6 +55,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/", OpenAccount)
+//	http.HandleFunc("/OpenAccount", OpenAccount)
+	http.HandleFunc("/Transfer", Transfer)
 	http.ListenAndServe(":1234", nil)
 }
