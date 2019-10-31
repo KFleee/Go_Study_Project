@@ -26,6 +26,11 @@ func (bank *Bank) LockRead(userId string) (Lock, error) {
 	}
 	bank.lock.RUnlock()
 	bank.lock.Lock()
+	if userLock, ok := bank.userLock[userId]; ok {
+		go bank.LockUpdate(userId)
+		bank.lock.Unlock()
+		return userLock, nil
+	}
 	var lock sync.RWMutex
 	var timeAccessed time.Time = time.Now()
 	var userLock Lock = Lock{
