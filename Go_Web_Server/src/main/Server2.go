@@ -59,5 +59,6 @@ func main() {
 	mux.HandleFunc("/OpenAccount", OpenAccount)
 	mux.HandleFunc("/Transfer", Transfer)
 	mux.HandleFunc("/Balance", Balance)
+	mux.HandleFunc("/DeleteAccount", DeleteAccount)
 	http.ListenAndServe(":1234", mux)
 }

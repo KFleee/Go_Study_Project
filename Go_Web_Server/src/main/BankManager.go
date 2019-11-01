@@ -12,7 +12,7 @@ type Lock struct {
 
 type Bank struct {
 	lock sync.RWMutex
-	userLock map[string]Lock
+	userLock map[string]Lock "用户锁字典"
 	MaxLifeTime int64 "用户锁最长存活时间s"
 	GcLifeTime int64 "垃圾回收周期s"
 }

@@ -154,3 +154,41 @@ func (user *User) Balance() error {
 	user.balance = balance
 	return nil
 }
+
+func (user *User) DeleteAccount(destinationId string) error {
+	if user.power == 0 {
+		log.Println("not have enough power")
+		return errors.New("not have enough power")
+	}
+	dLock, err := GlobalBank.LockRead(destinationId)
+	if err != nil {
+		log.Println("获取用户锁失败")
+		return err
+	}
+	dLock.lock.Lock()
+	defer dLock.lock.Unlock()
+	tx, err := Db.Begin()
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	stmt, err := tx.Prepare("Delete From User Where userId = ?")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	userId, _ := strconv.Atoi(destinationId)
+	_, err = stmt.Exec(userId)
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return err
+	}
+	err = tx.Commit()
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return err
+	}
+	return nil
+}

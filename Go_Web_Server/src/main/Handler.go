@@ -44,8 +44,8 @@ func OpenAccount(w http.ResponseWriter, r *http.Request){
 		w.Write([]byte(err.Error()))
 		log.Panicln(err)
 	}
-	log.Println("new User Id = ", userId)
 	w.Write([]byte("open account success"))
+	log.Println("new User Id = ", userId)
 }
 
 func Transfer(w http.ResponseWriter, r *http.Request) {
@@ -76,8 +76,8 @@ func Transfer(w http.ResponseWriter, r *http.Request) {
 	source := NewPointer(SourceUserName, "", SourceUserId, 0, 0)
 	sLock, err := GlobalBank.LockRead(SourceId)
 	if err != nil {
-		log.Panicln("获取源用户锁失败")
 		w.Write([]byte("获取源用户锁失败"))
+		log.Panicln("获取源用户锁失败")
 	}
 	source.lock = sLock
 	source.lock.lock.Lock()
@@ -107,8 +107,39 @@ func Balance(w http.ResponseWriter, r *http.Request) {
 	user := NewPointer("", "", userId, 0, 0)
 	err = user.Balance()
 	if err != nil {
-		log.Panicln(err)
 		w.Write([]byte("获取用户余额失败"))
+		log.Panicln(err)
 	}
 	w.Write([]byte("User balance = " + strconv.Itoa(user.GetBalance())))
+}
+
+func DeleteAccount(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if err := recover(); err != nil {
+			return
+		}
+	}()
+	err := r.ParseForm()
+	if err != nil {
+		w.Write([]byte(err.Error()))
+		log.Panicln(err)
+    }
+	formData := make(map[string]interface{})
+	json.NewDecoder(r.Body).Decode(&formData)
+	OperatorIdString := formData["OperatorId"].(string)
+	DestinationIdString := formData["DestinationId"].(string)
+	OperatorId, _ := strconv.Atoi(OperatorIdString)
+	var power int
+	err = Db.QueryRow("Select power From User Where userId = ?", OperatorId).Scan(&power)
+	if err != nil {
+		w.Write([]byte("该银行员工不存在"))
+		log.Panicln("该银行员工不存在")
+	}
+	Operator := NewPointer("", "", OperatorId, 0, power)
+	err = Operator.DeleteAccount(DestinationIdString)
+	if err != nil {
+		w.Write([]byte("删除用户账户失败"))
+		log.Panicln(err)
+	}
+	w.Write([]byte("Delete User Account Success"))
 }
