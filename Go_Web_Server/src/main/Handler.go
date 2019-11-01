@@ -7,7 +7,51 @@ import (
 	"encoding/json"
 	_ "github.com/go-sql-driver/mysql"
 )
-
+func Login(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("Destroy Session")
+			GlobalSessions.SessionDestroy(w, r)
+			return
+		}
+	}()
+	sess, err := GlobalSessions.SessionStart(w, r)
+	defer sess.SessionRelease(w)
+	if err != nil {
+		log.Println("Open Session error", err)
+	} else {
+		userId := sess.Get("userId")
+		power := sess.Get("power")
+		if userId == nil || power == nil {
+			log.Println("need passwd to login")
+		} else {
+			w.Write([]byte("Login Success"))
+			return
+		}
+	}
+	formData := make(map[string]interface{})
+	json.NewDecoder(r.Body).Decode(&formData)
+	UserName := formData["UserName"].(string)
+	passwd := formData["Passwd"].(string)
+	var userId, power int
+	err = Db.QueryRow("Select userId, power From User Where UserName = ? and passwd = ?", UserName, passwd).Scan(&userId, &power)
+	if err != nil {
+		w.Write([]byte("no this User or UserName and Passwd error"))
+		log.Panicln(err)
+	}
+	err = sess.Set("userId", userId)
+	if err != nil {
+		w.Write([]byte("Login failure"))
+		log.Panicln("Insert userId error")
+	}
+	err = sess.Set("power", power)
+	if err != nil {
+		w.Write([]byte("Login failure"))
+		sess.Delete("userId")
+		log.Panicln("Insert power error")
+	}
+	w.Write([]byte("Login Success"))
+}
 func OpenAccount(w http.ResponseWriter, r *http.Request){
 	defer func() {
 		if err := recover(); err != nil {

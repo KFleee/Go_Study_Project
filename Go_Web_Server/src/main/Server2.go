@@ -40,22 +40,23 @@ func init() {
     go GlobalBank.Gc()
 }
 
-func login(w http.ResponseWriter, r *http.Request) {
-    sess, _ := GlobalSessions.SessionStart(w, r)
-    defer sess.SessionRelease(w)
-    username := sess.Get("username")
-    if username == nil {
-    	sess.Set("username", "saljdhasjkdha")
-    	w.Write([]byte("no session"))
-    	return
-    }else {
-    	w.Write([]byte(username.(string)))
-    	return
-    }
-}
+//func login(w http.ResponseWriter, r *http.Request) {
+//    sess, _ := GlobalSessions.SessionStart(w, r)
+//    defer sess.SessionRelease(w)
+//    username := sess.Get("username")
+//    if username == nil {
+//    	sess.Set("username", "saljdhasjkdha")
+//    	w.Write([]byte("no session"))
+//    	return
+//    }else {
+//    	w.Write([]byte(username.(string)))
+//    	return
+//    }
+//}
 
 func main() {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/Login", Login)
 	mux.HandleFunc("/OpenAccount", OpenAccount)
 	mux.HandleFunc("/Transfer", Transfer)
 	mux.HandleFunc("/Balance", Balance)
