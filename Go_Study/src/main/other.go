@@ -1,11 +1,12 @@
 package main
 
-import (
 //	"fmt"
-)
 
-func (a *Node)say(){
-//	str := "aa"
-//	a.Name = &str
+type bb struct {
+	s int
 }
 
+func (a *Node) say() {
+	//	str := "aa"
+	//	a.Name = &str
+}

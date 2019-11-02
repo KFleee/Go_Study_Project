@@ -13,5 +13,5 @@ func main() {
     "gopher",
     "sasd",
 	)
-	fmt.Println(result)
+	fmt.Printf("%v", result)
 }

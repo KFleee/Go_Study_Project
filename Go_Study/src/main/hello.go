@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"net"
-//	"strconv"
-//	"time"
-//	"reflect"
+	"sync"
+
+	//	"strconv"
+	"time"
+	//	"reflect"
 	//	"even"
 )
 
@@ -33,13 +35,14 @@ func (a Node) Hell() {
 
 var ci chan int
 var cp chan string
-func Handle(conn net.Conn){
+
+func Handle(conn net.Conn) {
 	defer conn.Close()
 	buf := make([]byte, 10)
 	fmt.Printf("request IP = %v\n", conn.RemoteAddr())
 	for {
 		n, err := conn.Read(buf)
-		if err != nil  {
+		if err != nil {
 			fmt.Println(err)
 		}
 		if n == 0 {
@@ -48,19 +51,77 @@ func Handle(conn net.Conn){
 		fmt.Println("messsage:", string(buf))
 	}
 }
+
+type Lock struct {
+	lock *sync.RWMutex
+}
+
+var m map[string]Lock
+
+func lockT(i int) {
+	// var lock sync.RWMutex
+	lock := m["a"]
+	lock.lock.Lock()
+	fmt.Printf("%p\n", lock.lock)
+	fmt.Println("hello", i)
+	for {
+
+	}
+	lock.lock.Unlock()
+}
 func main() {
-//	ln, err := net.Listen("tcp", "0.0.0.0:777")
-//	if err != nil {
-//		fmt.Println(err)
-//	}
-//	for {
-//		fmt.Println("start listening ...")
-//		conn, err := ln.Accept()
-//		if err != nil {
-//			fmt.Println("erro")
-//		}
-//		go Handle(conn)
-//	}
+	m = make(map[string]Lock)
+	var lock sync.RWMutex
+	m["a"] = Lock{&lock}
+	go lockT(1)
+	go lockT(2)
+	for {
+
+	}
+	fmt.Println(time.Now().Unix())
+	// m := make(map[string]Lock)
+	// if v, ok := m["a"]; ok {
+	// 	fmt.Println("1", v)
+	// }
+	// if v, ok := m["a"]; ok {
+	// 	fmt.Println("1", v)
+	// }
+	// fmt.Println("2", m["a"])
+	// for k, v := range m {
+	// 	fmt.Println(k, v)
+	// }
+	// fmt.Println(time.Now().Unix() + 20)
+	// lock := Lock{}
+	// fmt.Println(lock.lock)
+	// fmt.Println(lock)
+	// var lock sync.RWMutex
+	// c := lock
+	// lock.Lock()
+	// c.Lock()
+	// fmt.Println("sad")
+	// c.Unlock()
+	// lock.Unlock()
+	// a := &Lock{lock}
+	// lock.Lock()
+	// fmt.Printf("%v\n", lock)
+	// go a.lockT(1)
+	// go a.lockT(2)
+	// go a.lockT(3)
+	// for {
+	// }
+	// lock.Unlock()
+	//	ln, err := net.Listen("tcp", "0.0.0.0:777")
+	//	if err != nil {
+	//		fmt.Println(err)
+	//	}
+	//	for {
+	//		fmt.Println("start listening ...")
+	//		conn, err := ln.Accept()
+	//		if err != nil {
+	//			fmt.Println("erro")
+	//		}
+	//		go Handle(conn)
+	//	}
 	//	var a int; var b int
 	//	var(
 	//		a int
@@ -202,8 +263,8 @@ func main() {
 	//		m := t.Method(index)
 	//		fmt.Printf("%s: %v\n", m.Name, m.Type)
 	//	}
-//	ci = make(chan int, 10)
-//	cp = make(chan string, 10)
+	//	ci = make(chan int, 10)
+	//	cp = make(chan string, 10)
 	//	go hello(1, 2, 3, 4, 6, 9)
 	//	go change(5, 10, 42, 53, -1)
 	//	i := 0
@@ -212,22 +273,22 @@ func main() {
 	//	msg1 := <- ci
 	//	msg2 = <- cp
 	//	i := 0
-//	go select_test()
-//	go change()
+	//	go select_test()
+	//	go change()
 	// tick := time.NewTicker(1 * time.Second)
 	// L:
-//	for i := 0; i < 10; i++ {
-//		select {
-//		case ci <- i:
-//			//				fmt.Println("first finish:", msg1)
-//		case cp <- strconv.Itoa(i):
-//			// fmt.Printf("%d: case <-tick.C\n", i)
-//			// default:
-//			// 	break L
-//		}
-//		//		fmt.Println("loop=", i)
-//	}
-//	time.Sleep(2 * time.Second)
+	//	for i := 0; i < 10; i++ {
+	//		select {
+	//		case ci <- i:
+	//			//				fmt.Println("first finish:", msg1)
+	//		case cp <- strconv.Itoa(i):
+	//			// fmt.Printf("%d: case <-tick.C\n", i)
+	//			// default:
+	//			// 	break L
+	//		}
+	//		//		fmt.Println("loop=", i)
+	//	}
+	//	time.Sleep(2 * time.Second)
 	// if msg1, ok := <- ci; ok {
 	// 	fmt.Println(msg1)
 	// }
@@ -236,18 +297,15 @@ func main() {
 	// }
 	//	fmt.Println(msg1)
 	//	fmt.Println(msg2)
-//	println("finish")
-//	var a Token = Token{"nihao", Node{10, "asd"}}
-//	t := reflect.TypeOf(a)
-//	v := reflect.ValueOf(a)
-//	fi := v.Field(1)
+	//	println("finish")
+	//	var a Token = Token{"nihao", Node{10, "asd"}}
+	//	t := reflect.TypeOf(a)
+	//	v := reflect.ValueOf(a)
+	//	fi := v.Field(1)
 	////	v :=
-//	fmt.Printf("%v\n", fi.NumMethod())
-//	text_defer()
-//	println("sada")
-	go token_text()
-	go token_text()
-	for{}
+	//	fmt.Printf("%v\n", fi.NumMethod())
+	//	text_defer()
+	//	println("sada")
 }
 func interface_test(any interface{}) {
 	if t, ok := any.(F); ok {
@@ -267,7 +325,7 @@ func hello(args ...int) {
 	cp <- "sas"
 }
 
-func token_text(){
+func token_text() {
 	fmt.Println("hello")
 }
 func change() {
