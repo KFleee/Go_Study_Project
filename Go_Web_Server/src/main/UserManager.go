@@ -145,6 +145,7 @@ func (user *User) Balance() error {
 	}
 	user.lock = userLock
 	user.lock.lock.RLock()
+	defer user.lock.lock.RUnlock()
 	var balance int
 	err = Db.QueryRow("Select balance From User Where userId = ?", user.GetUserId()).Scan(&balance)
 	if err != nil {
