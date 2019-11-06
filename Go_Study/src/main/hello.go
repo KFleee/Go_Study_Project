@@ -36,6 +36,7 @@ func (a Node) Hell() {
 var ci chan int
 var cp chan string
 
+// var a int
 func Handle(conn net.Conn) {
 	defer conn.Close()
 	buf := make([]byte, 10)
@@ -57,7 +58,11 @@ type Lock struct {
 }
 
 var m map[string]Lock
+var a int
 
+func addA() {
+	a++
+}
 func lockT(i int) {
 	// var lock sync.RWMutex
 	lock := m["a"]
@@ -70,14 +75,18 @@ func lockT(i int) {
 	lock.lock.Unlock()
 }
 func main() {
-	m = make(map[string]Lock)
-	var lock sync.RWMutex
-	m["a"] = Lock{&lock}
-	go lockT(1)
-	go lockT(2)
-	for {
+	// a = 1
+	fmt.Println("a=", a)
+	addA()
+	fmt.Println("a= ", a)
+	// m = make(map[string]Lock)
+	// var lock sync.RWMutex
+	// m["a"] = Lock{&lock}
+	// go lockT(1)
+	// go lockT(2)
+	// for {
 
-	}
+	// }
 	fmt.Println(time.Now().Unix())
 	// m := make(map[string]Lock)
 	// if v, ok := m["a"]; ok {
