@@ -12,8 +12,8 @@ var GlobalSessions *session.Manager
 var Db *sql.DB
 var GlobalBank *Bank
 const(
-	MaxLifeTime int64 = 18000
-	GcLifeTime int64 = 300
+	MaxLifeTime int64 = 120
+	GcLifeTime int64 = 120
 )
 func init() {
     sessionConfig := &session.ManagerConfig{
@@ -39,20 +39,6 @@ func init() {
     go GlobalSessions.GC()
     go GlobalBank.Gc()
 }
-
-//func login(w http.ResponseWriter, r *http.Request) {
-//    sess, _ := GlobalSessions.SessionStart(w, r)
-//    defer sess.SessionRelease(w)
-//    username := sess.Get("username")
-//    if username == nil {
-//    	sess.Set("username", "saljdhasjkdha")
-//    	w.Write([]byte("no session"))
-//    	return
-//    }else {
-//    	w.Write([]byte(username.(string)))
-//    	return
-//    }
-//}
 
 func main() {
 	log.Println("Server Start....")

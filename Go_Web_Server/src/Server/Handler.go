@@ -15,6 +15,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}()
+	logUrl(r, "Login")
 	sess, err := GlobalSessions.SessionStart(w, r)
 	defer sess.SessionRelease(w)
 	if err != nil {
@@ -31,13 +32,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	formData := make(map[string]interface{})
 	json.NewDecoder(r.Body).Decode(&formData)
-	UserName := formData["UserName"].(string)
+	UserId := formData["UserId"].(string)
 	passwd := formData["Passwd"].(string)
-	log.Println(UserName, passwd)
+	log.Println(UserId, passwd)
 	var userId, power int
-	err = Db.QueryRow("Select userId, power From User Where UserName = ? and passwd = ?", UserName, passwd).Scan(&userId, &power)
+	err = Db.QueryRow("Select userId, power From User Where userId = ? and passwd = ?", UserId, passwd).Scan(&userId, &power)
 	if err != nil {
-		w.Write([]byte("no this User or UserName and Passwd error"))
+		w.Write([]byte("no this User or UserId and Passwd error"))
 		log.Panicln(err)
 	}
 	err = sess.Set("userId", userId)
@@ -59,6 +60,7 @@ func Logout(w http.ResponseWriter, r *http.Request){
 			return
 		}
 	}()
+	logUrl(r, "Logout")
 	GlobalSessions.SessionDestroy(w, r)
 	w.Write([]byte("Logout success"))
 }
@@ -69,6 +71,7 @@ func OpenAccount(w http.ResponseWriter, r *http.Request){
 			return
 		}
 	}()
+	logUrl(r, "OpenAccount")
 	sess, err := GlobalSessions.SessionStart(w, r)
 	defer sess.SessionRelease(w)
 	if err != nil {
@@ -83,7 +86,6 @@ func OpenAccount(w http.ResponseWriter, r *http.Request){
 	}
 	formData := make(map[string]interface{})
 	json.NewDecoder(r.Body).Decode(&formData)
-	UserName := formData["UserName"].(string)
 	passwd := formData["Passwd"].(string)
 	Power := formData["Power"].(string)
 	power, _ := strconv.Atoi(Power)
@@ -97,14 +99,14 @@ func OpenAccount(w http.ResponseWriter, r *http.Request){
 	for rows.Next() {
 		var o_userId, o_power int
 		_ = rows.Scan(&o_userId, &o_power)
-		operator = New("", "", o_userId, 0, o_power)
+		operator = New("", o_userId, 0, o_power)
 	}
-	userId, err := operator.OpenAccount(UserName, passwd, power)
+	userId, err := operator.OpenAccount(passwd, power)
 	if err != nil {
 		w.Write([]byte(err.Error()))
 		log.Panicln(err)
 	}
-	w.Write([]byte("open account success"))
+	w.Write([]byte("open account success userId = " + strconv.Itoa(userId)))
 	log.Println("new User Id = ", userId)
 }
 
@@ -114,6 +116,7 @@ func Transfer(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}()
+	logUrl(r, "Transfer")
 	sess, err := GlobalSessions.SessionStart(w, r)
 	defer sess.SessionRelease(w)
 	if err != nil {
@@ -132,13 +135,17 @@ func Transfer(w http.ResponseWriter, r *http.Request) {
 	Money := formData["Money"].(string)
 	DestinationUserId, _ := strconv.Atoi(DestinationId)
 	money, _ := strconv.Atoi(Money)
-	var SourceUserName string
-	err = Db.QueryRow("Select UserName From User Where userId = ?", SourceUserId).Scan(&SourceUserName)
+	if DestinationUserId == SourceUserId.(int) {
+		w.Write([]byte("can not transfer money to myself"))
+		log.Panicln("can not transfer money to myself")
+	}
+	var tempUserId int
+	err = Db.QueryRow("Select userId From User Where userId = ?", SourceUserId).Scan(&tempUserId)
 	if err != nil {
 		w.Write([]byte("no this source User"))
 		log.Panicln("no this User")
 	}
-	source := NewPointer(SourceUserName, "", SourceUserId.(int), 0, 0)
+	source := NewPointer("", SourceUserId.(int), 0, 0)
 	sLock, err := GlobalBank.LockRead(strconv.Itoa(SourceUserId.(int)))
 	if err != nil {
 		w.Write([]byte("获取源用户锁失败"))
@@ -160,6 +167,7 @@ func Balance(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}()
+	logUrl(r, "Balance")
 	sess, err := GlobalSessions.SessionStart(w, r)
 	defer sess.SessionRelease(w)
 	if err != nil {
@@ -172,7 +180,7 @@ func Balance(w http.ResponseWriter, r *http.Request) {
 		GlobalSessions.SessionDestroy(w, r)
 		log.Panicln("get session context error")
 	}
-	user := NewPointer("", "", userId.(int), 0, 0)
+	user := NewPointer("", userId.(int), 0, 0)
 	err = user.Balance()
 	if err != nil {
 		w.Write([]byte("获取用户余额失败"))
@@ -187,6 +195,7 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}()
+	logUrl(r, "DeleteAccount")
 	sess, err := GlobalSessions.SessionStart(w, r)
 	defer sess.SessionRelease(w)
 	if err != nil {
@@ -208,11 +217,17 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("该银行员工不存在"))
 		log.Panicln("该银行员工不存在")
 	}
-	Operator := NewPointer("", "", OperatorId.(int), 0, power)
+	Operator := NewPointer("", OperatorId.(int), 0, power)
 	err = Operator.DeleteAccount(DestinationIdString)
 	if err != nil {
 		w.Write([]byte("删除用户账户失败"))
 		log.Panicln(err)
 	}
 	w.Write([]byte("Delete User Account Success"))
+}
+
+func logUrl(r *http.Request, methodName string) {
+	requestMethod := r.Method
+	requestUrl := r.RemoteAddr
+	log.Println("requestMethod = " + methodName + " : " + "Method = " + requestMethod + "----------" + " From " + requestUrl)
 }

@@ -14,3 +14,6 @@ func Say_Hello(){
 func say_hello(){
 	fmt.Println("hello")
 }
+func main(){
+	fmt.Println("sads")
+}
