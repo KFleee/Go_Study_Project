@@ -7,6 +7,11 @@ type Text struct{
 	Name string
 	id int
 }
+var A Text
+func init() {
+	A.Name = "hello"
+	A.id = 10
+}
 func Say_Hello(){
 	fmt.Println("hello")
 }

@@ -1,14 +1,16 @@
 package main
 
 import (
+	_ "context"
+	// "encoding/json"
 	"fmt"
 	"net"
 	"sync"
 
 	//	"strconv"
-	// "even"
+	//	"even"
+	// "reflect"
 	"time"
-	//	"reflect"
 	//	"even"
 )
 
@@ -18,8 +20,8 @@ type Token struct {
 	Node
 }
 type Node struct {
-	Id   int    "name"
-	Name string "asd"
+	Id   int    `json:"id"`
+	Name string `json:"name"`
 }
 type foo int
 type F interface {
@@ -82,8 +84,32 @@ func lockT(i int) {
 	lock.lock.Unlock()
 }
 func main() {
-	addA()
-	println(a)
+	var a Node
+	a.Id = 10
+	a.Name = "ss"
+	b := &a
+	b.Id = 20
+	fmt.Println(a)
+	// node := Node{Id: 10, Name: "nihao"}
+	// b, _ := json.Marshal(node)
+	// fmt.Printf("%s\n", b)
+	// c := make(map[string]interface{})
+	// json.Unmarshal(b, &c)
+	// for key, value := range c {
+	// 	fmt.Println(key, value)
+	// }
+	// v := reflect.ValueOf(node)
+	// t := reflect.TypeOf(&node)
+	// fie := v.Field(0).Type()
+	// tag := t.Elem().Field(0).Tag
+	// fmt.Println(tag.Get("json"))
+	// ctx := context.Background()
+	// ctx = context.WithValue(ctx, "Name", "hel")
+	// CtxText(ctx)
+	//	h()
+	//	fmt.Println(even.A)
+	//	addA()
+	//	println(a)
 	// even.Say_Hello()
 	// var a Token
 	// a.Name = "as"
