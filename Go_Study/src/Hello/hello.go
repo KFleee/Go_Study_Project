@@ -10,8 +10,8 @@ import (
 	//	"strconv"
 	//	"even"
 	// "reflect"
+	// _ "even"
 	"time"
-	//	"even"
 )
 
 type Token struct {
@@ -29,7 +29,7 @@ type F interface {
 	Hell()
 }
 
-func (a *Node) Goa(i int) {
+func (a Node) Goa(i int) {
 	a.Id = i
 }
 func (a Node) Hell() {
@@ -83,13 +83,34 @@ func lockT(i int) {
 	}
 	lock.lock.Unlock()
 }
+func addNum(name string) {
+	fmt.Println(name)
+	for i := 0; i < 30; i++ {
+		fmt.Println(i)
+	}
+}
 func main() {
-	var a Node
-	a.Id = 10
-	a.Name = "ss"
-	b := &a
-	b.Id = 20
-	fmt.Println(a)
+	fmt.Println(sortList)
+	sign := make(chan interface{})
+	go merge(0, 5, sign)
+	fmt.Println(sortList)
+	select {
+	case t := <-sign:
+		fmt.Println(sortList)
+		fmt.Println(t)
+	}
+	fmt.Println(sortList)
+	//	even.Say_Hello()
+	//	var a Node
+	//	a.Id = 10
+	//	a.Name = "ss"
+	//	a.Goa(2)
+	//	fmt.Println(a)
+	//	go addNum("a")
+	//	go addNum("b")
+	//	for {
+	//
+	//	}
 	// node := Node{Id: 10, Name: "nihao"}
 	// b, _ := json.Marshal(node)
 	// fmt.Printf("%s\n", b)

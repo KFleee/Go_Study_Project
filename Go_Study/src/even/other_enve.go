@@ -4,6 +4,6 @@ import (
 	"fmt"
 )
 
-func say_Hello(){
+func Say_Hello() {
 	fmt.Println("nihao")
 }

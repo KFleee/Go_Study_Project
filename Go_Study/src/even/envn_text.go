@@ -12,7 +12,7 @@ func init() {
 	A.Name = "hello"
 	A.id = 10
 }
-func Say_Hello(){
+func Say_Hello_s(){
 	fmt.Println("hello")
 }
 
